@@ -17,6 +17,14 @@ function createItem(name) {
   });
 }
 
+function deleteItem(id) {
+
+  return fetch(`${BASE_URL}/items/${id}`, {
+    method: 'DELETE'
+  });
+
+}
+
 function updateItem(id, updateData) {
   return fetch(`${BASE_URL}/items/${id}`, {
     method: 'PATCH',
@@ -29,4 +37,5 @@ export default {
   getItems,
   createItem,
   updateItem,
+  deleteItem
 };

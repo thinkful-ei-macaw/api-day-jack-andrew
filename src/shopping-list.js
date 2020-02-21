@@ -14,6 +14,7 @@ const generateItemElement = function (item) {
   }
 
   return `
+ 
     <li class="js-item-element" data-item-id="${item.id}">
       ${itemTitle}
       <div class="shopping-item-controls">
@@ -40,10 +41,20 @@ const render = function () {
   }
 
   // render the shopping list in the DOM
-  const shoppingListItemsString = generateShoppingItemsString(items);
+  let shoppingListItemsString = generateShoppingItemsString(items);
+
+  if(store.getError()) {
+    shoppingListItemsString += `<p class="request-error">Error: ${store.requestError}</p>`;
+    store.setError('');
+  }
 
   // insert that HTML into the DOM
   $('.js-shopping-list').html(shoppingListItemsString);
+};
+
+const addErrorToStoreAndRender = function(error) {
+  store.setError(error);
+  render();
 };
 
 const handleNewItemSubmit = function () {
@@ -52,11 +63,11 @@ const handleNewItemSubmit = function () {
     const newItemName = $('.js-shopping-list-entry').val();
     $('.js-shopping-list-entry').val('');
     api.createItem(newItemName)
-      .then(res => res.json())
       .then((newItemName) => {
         store.addItem(newItemName);
         render();
-      });
+      })
+      .catch(error => addErrorToStoreAndRender(error.message));
 
   });
 };
@@ -77,7 +88,8 @@ const handleDeleteItemClicked = function () {
       .then(() => {
         store.findAndDelete(id);
         render();
-      });
+      })
+      .catch(error => addErrorToStoreAndRender(error.message));
   });
 };
 
@@ -86,12 +98,12 @@ const handleEditShoppingItemSubmit = function () {
     event.preventDefault();
     const id = getItemIdFromElement(event.currentTarget);
     const itemName = $(event.currentTarget).find('.shopping-item').val();
-    api.updateItem(id, itemName)
-      .then(res => res.json())
-      .then((id, itemName) => {
-        store.findAndUpdate(id, itemName);
+    api.updateItem(id, {name: itemName})
+      .then(() => {
+        store.findAndUpdate(id, {name: itemName});
         render();
-      });
+      })
+      .catch(error => addErrorToStoreAndRender(error.message));
   });
 };
 
@@ -100,12 +112,12 @@ const handleItemCheckClicked = function () {
     const id = getItemIdFromElement(event.currentTarget);
     const item = store.findById(id);
     api.updateItem(id, {checked: !item.checked})
-      .then(res => res.json())
       .then(() => {
         // console.log(updateData);
         store.findAndUpdate(id, {checked: !item.checked});
         render();
-      });
+      })
+      .catch(error => addErrorToStoreAndRender(error.message));
   });
 };
 
